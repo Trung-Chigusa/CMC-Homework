@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CmcHomework.Api/CmcHomework.Api.csproj" />
+  </Folder>
+</Solution>
