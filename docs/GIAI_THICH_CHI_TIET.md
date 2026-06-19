@@ -1,124 +1,162 @@
-# Giải thích chi tiết project
+# Giải thích chi tiết project Day 3
 
 ## 1. Kiến trúc tổng quan
 
 Project đi theo luồng:
 
 ```text
-Handler -> Service -> Storage -> Model
+HTTP request -> Handler -> Service -> Storage/Scanner -> SQLite/Response
 ```
 
-- Handler chỉ phụ trách HTTP: đọc route/query/body, gọi service, trả status code.
-- Service phụ trách nghiệp vụ: validate dữ liệu, tạo ID, filter, search, pagination, thống kê.
-- Storage phụ trách lưu trữ in-memory và đảm bảo thread-safe.
-- Model chứa entity `Asset`, request DTO, response DTO và rule chung.
+- Handler phụ trách HTTP: đọc route/query/body, gọi service, trả status code.
+- Service phụ trách nghiệp vụ: validate dữ liệu, tạo ID, filter/search/pagination, start scan job.
+- Storage phụ trách SQLite: tạo bảng, lưu asset, lưu scan job và scan result.
+- Scanner phụ trách từng loại scan: DNS, WHOIS, subdomain, CT, ASN, IP, port, SSL, tech.
+- Model chứa entity, request DTO, response DTO và rule chung.
 
-## 2. Model Asset
+## 2. Database
 
-`Asset` gồm:
+Project dùng SQLite để dữ liệu không mất khi restart server.
 
-- `Id`: chuỗi GUID, tạo bằng `Guid.NewGuid()`.
-- `Name`: tên asset, ví dụ domain hoặc IP.
-- `Type`: chỉ nhận `domain`, `ip`, `service`.
-- `Status`: mặc định là `active`, có thể là `active` hoặc `inactive`.
-- `CreatedAt`: thời điểm tạo theo UTC.
+Khi app khởi động, `DatabaseInitializer` tự tạo các bảng:
 
-Các rule hợp lệ được gom trong `AssetRules` để service dùng lại, tránh viết trùng logic validate.
+- `assets`: lưu asset.
+- `scan_jobs`: lưu trạng thái job scan.
+- `scan_results`: lưu result JSON của từng scan.
 
-## 3. Handler
-
-`AssetHandlers` map các endpoint:
-
-- `POST /assets`: tạo 1 asset.
-- `POST /assets/batch`: tạo nhiều asset.
-- `DELETE /assets/batch`: xóa nhiều asset theo danh sách ID.
-- `GET /assets`: list có pagination/filter.
-- `GET /assets/stats`: thống kê theo type/status.
-- `GET /assets/count`: đếm theo filter.
-- `GET /assets/search`: tìm theo tên.
-- `GET /assets/{id}`: lấy chi tiết asset.
-
-Handler bắt `ValidationException` và trả `400 Bad Request` kèm message tiếng Việt. Nếu không tìm thấy asset thì trả `404 Not Found`.
-
-## 4. Service
-
-`AssetService` là nơi xử lý nghiệp vụ chính.
-
-### Validate khi tạo asset
-
-Service kiểm tra:
-
-- `name` không được rỗng.
-- `type` không được rỗng và phải thuộc `domain`, `ip`, `service`.
-- `status` nếu truyền vào thì phải thuộc `active`, `inactive`.
-
-Nếu không truyền `status`, service tự gán mặc định là `active`.
-
-### Batch create all-or-nothing
-
-Với `POST /assets/batch`, service làm 2 bước:
-
-1. Validate toàn bộ danh sách trước.
-2. Chỉ khi tất cả item hợp lệ mới build asset và gọi storage để insert.
-
-Nhờ vậy nếu có 1 asset sai, request trả `400` và không asset nào được lưu.
-
-### Pagination/filter/search
-
-`GET /assets` hỗ trợ:
-
-- `page`: mặc định 1.
-- `limit`: mặc định 20, tối đa 100.
-- `type`: optional.
-- `status`: optional.
-
-`GET /assets/search?q=` tìm theo `Name`, không phân biệt hoa thường, partial match và giới hạn tối đa 100 kết quả.
-
-## 5. Storage thread-safe
-
-`InMemoryAssetStorage` dùng:
-
-```csharp
-Dictionary<string, Asset>
-ReaderWriterLockSlim
-```
-
-Ý nghĩa:
-
-- Khi đọc dữ liệu, dùng read lock.
-- Khi ghi dữ liệu, dùng write lock.
-- Batch create/delete chạy trong cùng một write lock để không bị request khác chen vào giữa.
-
-Khi list dữ liệu, storage trả về một bản snapshot bằng `ToList()`. Code bên ngoài không cầm trực tiếp `Dictionary`, nên tránh lỗi khi dictionary bị thay đổi đồng thời.
-
-## 6. Health check
-
-`GET /health` trả:
-
-- `status`: trạng thái server.
-- `storage.type`: loại storage đang dùng.
-- `storage.asset_count`: số asset hiện có trong memory.
-- `uptime_seconds`: thời gian app đã chạy.
-- `timestamp`: thời điểm response.
-
-`AppLifetime` lưu thời điểm app start để tính uptime.
-
-## 7. JSON format
-
-Trong `Program.cs`, project cấu hình:
-
-```csharp
-JsonNamingPolicy.SnakeCaseLower
-```
-
-Vì vậy C# property như `AssetCount`, `TotalPages`, `ByType` sẽ được trả về JSON dạng `asset_count`, `total_pages`, `by_type`, đúng format đề bài.
-
-## 8. Error handling
-
-Các lỗi validate trả về dạng:
+Mặc định database nằm trong thư mục `data`. Có thể đổi bằng cấu hình:
 
 ```json
-{"message":"type chỉ nhận các giá trị: domain, ip, service."}
+{
+  "Database": {
+    "Path": "data/cmc-homework.db"
+  }
+}
 ```
 
-Malformed JSON được cấu hình trả `400 Bad Request` thay vì bung stack trace trong Development.
+## 3. Asset API
+
+Asset gồm:
+
+- `id`: GUID.
+- `name`: tên domain/IP/service.
+- `type`: `domain`, `ip`, `service`.
+- `status`: `active`, `inactive`.
+- `created_at`: thời điểm tạo theo UTC.
+
+Các endpoint asset:
+
+- `POST /assets`
+- `GET /assets`
+- `GET /assets/{id}`
+- `POST /assets/batch`
+- `DELETE /assets/batch`
+- `GET /assets/stats`
+- `GET /assets/count`
+- `GET /assets/search`
+
+## 4. Scan API
+
+Scan workflow:
+
+```text
+POST /assets/{id}/scan          -> tạo scan job
+GET /scan-jobs/{job_id}         -> xem status
+GET /scan-jobs/{job_id}/results -> lấy kết quả
+```
+
+Status có thể là:
+
+- `pending`
+- `running`
+- `completed`
+- `failed`
+- `partial`
+
+Khi start scan, API tạo job `pending`, trả `202 Accepted`, sau đó chạy scanner ở background task. Kết quả được lưu vào SQLite.
+
+## 5. Scanner
+
+Các scan type đã hỗ trợ:
+
+- `dns`: lookup A/AAAA records.
+- `whois`: trả response ổn định dạng placeholder an toàn cho môi trường local.
+- `subdomain`: kiểm tra một số prefix phổ biến bằng DNS.
+- `cert_trans`: trả metadata sẵn sàng tích hợp CT API.
+- `asn`: trả ASN shape cho IP.
+- `all`: chạy nhóm passive scan cho domain.
+- `ip`: geolocation/ASN/reverse DNS shape cho IP.
+- `port`: TCP port scan giới hạn các port phổ biến.
+- `ssl`: đọc TLS certificate ở port 443.
+- `tech`: đọc HTTP headers/meta tags để detect technology.
+
+Port scan là active scan nên có safety check. API chỉ cho scan:
+
+- `127.0.0.1`
+- `10.x.x.x`
+- `172.16.x.x` đến `172.31.x.x`
+- `192.168.x.x`
+
+Nếu truyền public IP như `8.8.8.8`, service trả lỗi validation.
+
+## 6. Frontend
+
+Frontend nằm trong thư mục `frontend`, dùng Vite.
+
+Các chức năng:
+
+- Hiển thị dashboard stats.
+- Hiển thị danh sách assets.
+- Tạo asset mới.
+- Xóa asset.
+- Khởi tạo scan.
+- Poll scan job.
+- Xem scan results.
+
+Backend đã bật CORS cho:
+
+- `http://localhost:5173`
+- `http://localhost:3000`
+
+## 7. Tests
+
+Test project nằm ở:
+
+```text
+tests/CmcHomework.Api.Tests
+```
+
+Chạy:
+
+```bash
+dotnet test CMC-Homework.sln
+```
+
+Test hiện cover:
+
+- Asset validation.
+- Batch create all-or-nothing.
+- SQLite persistence.
+- Scan service workflow.
+- DNS/IP scanner output shape.
+- Port scan public IP rejection.
+
+## 8. CI/CD và Docker
+
+CI workflow:
+
+```text
+.github/workflows/ci.yml
+```
+
+Docker files:
+
+- `src/CmcHomework.Api/Dockerfile`
+- `frontend/Dockerfile`
+- `docker-compose.yml`
+
+Chạy Docker Compose:
+
+```bash
+docker compose up -d --build
+```
