@@ -1,20 +1,4 @@
-# Bonus - CI/CD and Docker Compose Output
-
-## GitHub Actions
-
-Workflow file:
-
-```text
-.github/workflows/ci.yml
-```
-
-Jobs:
-
-- Backend restore/build/test.
-- Frontend install/build.
-- Trivy filesystem security scan.
-
-## Docker Compose
+# Bài 5 - Docker Compose Output
 
 Files:
 

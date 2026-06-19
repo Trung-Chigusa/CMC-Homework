@@ -1,4 +1,4 @@
-# Bài 3 - Unit Tests Output
+# Bài 2 - Unit Tests Output
 
 ## Command
 
@@ -9,7 +9,7 @@ dotnet test CMC-Homework.sln
 ## Result
 
 ```text
-Passed! - Failed: 0, Passed: 7, Skipped: 0, Total: 7, Duration: 312 ms
+Passed! - Failed: 0, Passed: 7, Skipped: 0, Total: 7
 ```
 
 ## Coverage areas

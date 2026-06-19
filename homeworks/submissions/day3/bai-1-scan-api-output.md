@@ -1,4 +1,4 @@
-# Bài 2 - Scan API Output
+# Bài 1 - Scan API Output
 
 ## Implemented endpoints
 
@@ -13,8 +13,9 @@
 
 ## Implemented scan types
 
-- Existing/passive: `dns`, `whois`, `subdomain`, `cert_trans`, `asn`, `all`
-- New: `ip`, `port`, `ssl`, `tech`
+- Passive/domain: `dns`, `whois`, `subdomain`, `cert_trans`, `all`
+- IP: `ip`, `asn`, `port`
+- Bonus: `ssl`, `tech`
 
 ## Runtime verification
 

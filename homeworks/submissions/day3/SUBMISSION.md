@@ -4,20 +4,19 @@
 
 ## Các bài đã hoàn thành
 
-- [x] Bài 1: Migrate sang Database
-- [x] Bài 2: Mở rộng Scan API
-- [x] Bài 3: Viết Unit Tests
-- [x] Bài 4: Tích hợp Frontend
-- [x] Bài 5: CI/CD với GitHub Actions (Bonus - config)
-- [x] Bài 6: Deploy với Docker Compose (Bonus - config)
-- [ ] Bài 7: Tính năng EASM mới (Bonus)
-- [ ] Bài 8: Deploy lên Cloud VM (Bonus - cần VM thật)
-- [ ] Bài 9: Domain & TLS/HTTPS (Bonus - cần domain/VM thật)
-- [ ] Bài 10: Auto Deploy on Merge (Bonus - cần server/secrets thật)
+- [x] Bài 1: Mở rộng Scan API
+- [x] Bài 2: Viết Unit Tests
+- [x] Bài 3: Tích hợp Frontend
+- [x] Bài 4: CI/CD với GitHub Actions
+- [x] Bài 5: Deploy với Docker Compose
+- [ ] Bài 6: Tính năng EASM mới (Bonus)
+- [ ] Bài 7: Deploy lên Cloud VM (Bonus)
+- [ ] Bài 8: Domain & TLS/HTTPS (Bonus)
+- [ ] Bài 9: Auto Deploy on Merge (Bonus)
 
 ## Link Repository
 
-[Điền link GitHub repository]
+https://github.com/Trung-Chigusa/CMC-Homework/tree/day3-complete
 
 ## Link Demo
 
@@ -29,17 +28,17 @@ Local:
 
 ## Ghi chú triển khai
 
-- Backend dùng ASP.NET Core Web API (.NET 10).
-- Database dùng SQLite, migration tự động khi app khởi động.
+- Backend dùng ASP.NET Core Web API (.NET 10). Đề cho phép dùng ngôn ngữ khác Go nếu mô tả cách cài đặt/chạy.
 - Scan job chạy nền và lưu status/results vào SQLite.
-- Port scan có safety check, từ chối public IP.
+- Đã implement scan types: `dns`, `whois`, `subdomain`, `cert_trans`, `asn`, `all`, `ip`, `port`, `ssl`, `tech`.
+- Port scan có safety check, chỉ cho localhost/private IP và từ chối public IP.
 - Frontend dùng Vite, gọi backend qua `VITE_API_URL`.
 - API documentation đã cập nhật tại `api.yml`.
 
 ## File chứng minh test
 
-- [Bài 1 - Database persistence](bai-1-database-output.md)
-- [Bài 2 - Scan API](bai-2-scan-api-output.md)
-- [Bài 3 - Unit tests](bai-3-unit-tests-output.md)
-- [Bài 4 - Frontend](bai-4-frontend-output.md)
-- [Bonus - CI/CD và Docker Compose](bonus-ci-docker-output.md)
+- [Bài 1 - Scan API](bai-1-scan-api-output.md)
+- [Bài 2 - Unit tests](bai-2-unit-tests-output.md)
+- [Bài 3 - Frontend](bai-3-frontend-output.md)
+- [Bài 4 - CI/CD](bai-4-cicd-output.md)
+- [Bài 5 - Docker Compose](bai-5-docker-compose-output.md)

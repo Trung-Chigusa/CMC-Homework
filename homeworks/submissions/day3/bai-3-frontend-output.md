@@ -1,4 +1,4 @@
-# Bài 4 - Frontend Output
+# Bài 3 - Frontend Output
 
 ## Implemented
 
@@ -17,7 +17,7 @@
 npm run build
 
 vite v8.0.16 building client environment for production...
-✓ built in 139ms
+✓ built
 ```
 
 ## Browser verification
@@ -28,10 +28,8 @@ Frontend was verified in the in-app browser at `http://localhost:5173` with back
 {
   "title": "CMC EASM Dashboard",
   "h1": "CMC EASM Dashboard",
-  "health": "Backend: ok | storage: sqlite | uptime: 58s",
-  "before": 3,
+  "health": "Backend: ok | storage: sqlite",
   "row_count_after_create": 4,
-  "form_message": "Created ui-fixed-1781791235288.local",
   "scan_result_status": "completed"
 }
 ```
