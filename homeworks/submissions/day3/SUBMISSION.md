@@ -16,7 +16,7 @@
 
 ## Link Repository
 
-https://github.com/Trung-Chigusa/CMC-Homework/tree/day3-complete
+https://github.com/Trung-Chigusa/CMC-Homework/tree/homework
 
 ## Link Demo
 
