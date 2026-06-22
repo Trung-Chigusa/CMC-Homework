@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: CMC Homework EASM API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Server status
+  /assets:
+    get:
+      summary: List assets
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [domain, ip, service]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        "200":
+          description: Paged assets
+    post:
+      summary: Create asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssetRequest"
+      responses:
+        "201":
+          description: Created asset
+        "400":
+          description: Invalid input
+  /assets/{id}:
+    get:
+      summary: Get asset by id
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset
+        "404":
+          description: Asset not found
+  /assets/batch:
+    post:
+      summary: Create many assets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assets:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CreateAssetRequest"
+      responses:
+        "201":
+          description: Batch create result
+    delete:
+      summary: Delete many assets
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          schema:
+            type: string
+          example: id1,id2,id3
+      responses:
+        "200":
+          description: Batch delete result
+  /assets/stats:
+    get:
+      summary: Count assets by type and status
+      responses:
+        "200":
+          description: Asset statistics
+  /assets/count:
+    get:
+      summary: Count assets by optional filters
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [domain, ip, service]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        "200":
+          description: Count result
+  /assets/search:
+    get:
+      summary: Search assets by name
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+  /assets/{id}/scan:
+    post:
+      summary: Start scan job
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scan_type]
+              properties:
+                scan_type:
+                  type: string
+                  enum: [dns, whois, subdomain, cert_trans, asn, all, ip, port, ssl, tech]
+      responses:
+        "202":
+          description: Scan job accepted
+        "400":
+          description: Invalid scan request
+        "404":
+          description: Asset not found
+  /scan-jobs/{id}:
+    get:
+      summary: Get scan job status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan job
+        "404":
+          description: Scan job not found
+  /scan-jobs/{id}/results:
+    get:
+      summary: Get scan job results
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan job results
+  /assets/{id}/scans:
+    get:
+      summary: List scan jobs for an asset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Scan jobs
+  /assets/{id}/results:
+    get:
+      summary: Get all scan results for an asset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset scan results
+  /assets/{id}/dns:
+    get:
+      summary: Get DNS scan results for an asset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: DNS results
+  /assets/{id}/whois:
+    get:
+      summary: Get WHOIS scan results for an asset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: WHOIS results
+  /assets/{id}/subdomains:
+    get:
+      summary: Get subdomain scan results for an asset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Subdomain results
+components:
+  parameters:
+    AssetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    CreateAssetRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          example: example.com
+        type:
+          type: string
+          enum: [domain, ip, service]
+        status:
+          type: string
+          enum: [active, inactive]
+          default: active

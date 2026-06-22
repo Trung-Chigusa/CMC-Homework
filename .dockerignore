@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.vs/
+data/
+*.db
+*.db-shm
+*.db-wal
+coverage.out
+coverage.html
